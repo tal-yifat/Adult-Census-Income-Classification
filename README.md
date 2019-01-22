@@ -1,1 +1,1 @@
-# Adult-Census-Income-Calssification
+# Adult-Census-Income-Classification

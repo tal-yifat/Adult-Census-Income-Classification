@@ -1,7 +1,5 @@
 import pandas as pd
 import numpy as np
-import warnings
-warnings.filterwarnings('ignore')
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted

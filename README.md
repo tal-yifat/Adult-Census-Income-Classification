@@ -1,7 +1,7 @@
 # Adult-Census-Income-Classification
 In this project, I work with a classical machine learning dataset - the [Adult Census](https://archive.ics.uci.edu/ml/datasets/Adult), to develop a predictive model for whether census individuals have an income that exceeds $50k. I use this problem to explore automated data pipelines and the development of custom sklearn data transformers. 
 
-Using careful feature pre-processing and model tuning, I achieved superior performance - **87.2% accuracy** - to other publicly available models I found. By comparison, the model in the [original paper](https://www.aaai.org/Papers/KDD/1996/KDD96-033.pdf) that introduced this dataset has accuracy of 85.9%. [Google TensorFlow’s wide-deep models](https://github.com/tensorflow/models/tree/master/official/wide_deep) achieve just over 83% accuracy. 
+Using careful feature pre-processing and model tuning, I achieved superior performance - **87.4% accuracy** - to other publicly available models I found. By comparison, the model in the [original paper](https://www.aaai.org/Papers/KDD/1996/KDD96-033.pdf) that introduced this dataset has accuracy of 85.9%. [Google TensorFlow’s wide-deep models](https://github.com/tensorflow/models/tree/master/official/wide_deep) achieve just over 83% accuracy. 
 
 Included in this repo are:
 1. [A Jupyter notebook with exploratory data analysis](https://github.com/tal-yifat/Adult-Census-Income-Classification/blob/master/Exploratory%20Data%20analysis.ipynb).

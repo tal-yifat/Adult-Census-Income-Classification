@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import warnings
+warnings.filterwarnings('ignore')
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
@@ -34,20 +36,22 @@ class NominalCategoryMerger(BaseEstimator, TransformerMixin):
         if type(n_threshold) == list:
             if len(n_threshold) != len(nominal_features):
                 raise ValueError("The length of n_threshold={0} and nominal_features={1} must be similar."
-                                 .format(len(n_threshold), (nominal_features)))
+                                 .format(len(n_threshold), nominal_features))
             self.n_threshold = n_threshold
         else:
             self.n_threshold = [n_threshold] * len(nominal_features)
         self.merged_nominal_features_map_ = {}
 
-    def aggregate_categorical_feature(self, var, df):
+    @staticmethod
+    def aggregate_categorical_feature(var, df):
         # Aggregate the target variable with respect to the categorical feature
-        cat_explore = pd.concat([df[var].value_counts(), df.groupby(var)[self.label].sum()],
+        cat_explore = pd.concat([df[var].value_counts(), df.groupby(var)['num_label'].sum()],
                                 axis=1, keys=['Trials', 'Successes'], sort=True)
         cat_explore.index.name = var
         return cat_explore
 
-    def get_best_nominal_value_pair(self, nominal_values, trials, successes, value_pairs):
+    @staticmethod
+    def get_best_nominal_value_pair(nominal_values, trials, successes, value_pairs):
         # Return the pair of categories that are the most likely (in terms of p value) to be sampled from
         # the same distribution.
         p_vals = np.asarray([0.] * len(value_pairs))
@@ -76,7 +80,7 @@ class NominalCategoryMerger(BaseEstimator, TransformerMixin):
         label_values = X[self.label].unique()
         if len(label_values) != 2:
             raise ValueError("Number of classes={0} must be 2".format(len(label_values)))
-        X[self.label] = X[self.label].replace({label_values[0]: 1, label_values[1]: 0})
+        X['num_label'] = X[self.label].replace({label_values[0]: 1, label_values[1]: 0})
 
         for var in self.nominal_features:
             # Get aggregate stats for pairs of categories and pick the best one.
@@ -109,7 +113,7 @@ class NominalCategoryMerger(BaseEstimator, TransformerMixin):
                                if j > i]
                 best_value_pair, p_val = self.get_best_nominal_value_pair(nominal_values, trials, successes,
                                                                           value_pairs)
-
+        X.drop(['num_label'], axis=1, inplace=True)
         return self
 
     def transform(self, X):
@@ -121,7 +125,7 @@ class NominalCategoryMerger(BaseEstimator, TransformerMixin):
 
 
 class OrdinalCategoryMerger(BaseEstimator, TransformerMixin):
-    """Merges adjuscent ordinal categories that have similar proportions of positive target.
+    """Merges adjacent ordinal categories that have similar proportions of positive target.
 
     Parameters
     ----------
@@ -148,26 +152,28 @@ class OrdinalCategoryMerger(BaseEstimator, TransformerMixin):
         if type(n_threshold) == list:
             if len(n_threshold) != len(ordinal_features):
                 raise ValueError("The length of n_threshold={0} and ordinal_features={1} must be similar."
-                                 .format(len(n_threshold), (ordinal_features)))
+                                 .format(len(n_threshold), ordinal_features))
             self.n_threshold = n_threshold
         else:
             self.n_threshold = [n_threshold] * len(ordinal_features)
         self.merged_ordinal_features_map_ = {}
 
-    def aggregate_categorical_feature(self, var, df):
+    @staticmethod
+    def aggregate_categorical_feature(var, df):
         # Aggregate the target variable with respect to the categorical feature
-        cat_explore = pd.concat([df[var].value_counts(), df.groupby(var)[self.label].sum()],
+        cat_explore = pd.concat([df[var].value_counts(), df.groupby(var)['num_label'].sum()],
                                 axis=1, keys=['Trials', 'Successes'])
         cat_explore.index.name = var
         return cat_explore.sort_index()
 
-    def unite_ordinal_categories(self, ordinal_series, category_1, category_2):
+    @staticmethod
+    def unite_ordinal_categories(ordinal_series, category_1, category_2):
         return ordinal_series.apply(lambda x: category_1 if x == category_2 else x)
 
-    def get_categories_to_collapse(self, ordinal_values, trials, successes, p_vals=[None]):
+    @staticmethod
+    def get_categories_to_collapse(ordinal_values, trials, successes):
         # Calculate P-values for adjacent categories
-        if p_vals[0] is None:
-            p_vals = [0.] * (len(ordinal_values) - 1)
+        p_vals = [0.] * (len(ordinal_values) - 1)
         p_vals = np.asarray(p_vals)
         for i in range(len(ordinal_values) - 1):
             if p_vals[i] == 0:
@@ -188,7 +194,7 @@ class OrdinalCategoryMerger(BaseEstimator, TransformerMixin):
         label_values = X[self.label].unique()
         if len(label_values) != 2:
             raise ValueError("Number of classes={0} must be 2".format(len(label_values)))
-        X[self.label] = X[self.label].replace({label_values[0]: 1, label_values[1]: 0})
+        X['num_label'] = X[self.label].replace({label_values[0]: 1, label_values[1]: 0})
 
         for var in self.ordinal_features:
             # Get aggregate stats for adjacent pairs of categories and calculate P-values.
@@ -218,7 +224,7 @@ class OrdinalCategoryMerger(BaseEstimator, TransformerMixin):
             for key in self.merged_ordinal_features_map_[var].keys():
                 self.merged_ordinal_features_map_[var][key] = values.index(self.merged_ordinal_features_map_
                                                                            [var][key]) + 1
-        # print(self.merged_ordinal_features_map_)
+        X.drop(['num_label'], axis=1, inplace=True)
         return self
 
     def transform(self, X):
